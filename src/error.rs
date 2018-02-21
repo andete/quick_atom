@@ -1,17 +1,30 @@
-// (c) 2017 Joost Yervante Damad <joost@damad.be>
+// (c) 2018 Joost Yervante Damad <joost@damad.be>
 
 use std;
 use atom_syndication;
 use failure::SyncFailure;
 
+/// Error
 #[derive(Fail, Debug)]
 pub enum Error {
-    #[fail(display = "Herenbossen Error: {}", txt)]
-    Error { txt: String, },
+    /// Quick Atom Error
+    #[fail(display = "Quick Atom Error: {}", txt)]
+    Error {
+        /// `String` describing the `Error::Error`
+        txt: String,
+    },
+    /// IO Error
     #[fail(display = "IO Error: {:?}", error)]
-    IO { error: std::io::Error, },
+    IO {
+        /// the containing `std::io::Error`
+        error: std::io::Error,
+    },
+    /// Atom Error
     #[fail(display = "Atom Error: {:?}", error)]
-    Atom { error: SyncFailure<atom_syndication::Error>, },
+    Atom {
+        /// the containing `atom_syndication::Error
+        error: SyncFailure<atom_syndication::Error>,
+    },
 }
 
 impl From<std::io::Error> for Error {

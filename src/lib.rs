@@ -1,5 +1,9 @@
 // (c) 2018 Joost Yervante Damad <joost@damad.be>
 
+//! A quick wrapper around the [atom_syndication](https://crates.io/crates/atom_syndication) crate
+
+#![warn(missing_docs)]
+
 extern crate atom_syndication;
 extern crate chrono;
 extern crate failure;
@@ -16,6 +20,7 @@ pub use error::Error;
 
 use chrono::{DateTime, Local};
 
+/// an Atom Feed
 #[derive(Debug, Default)]
 pub struct Feed {
     id:String,
@@ -27,60 +32,70 @@ pub struct Feed {
     date_updated:Option<DateTime<Local>>,
 }
 
+/// a builder for `Feed`
 #[derive(Debug, Default)]
 pub struct FeedBuilder(Feed);
 
 impl FeedBuilder {
-    
+
+    /// set the id of the feed
     pub fn id<T:Into<String>>(mut self, id:T) -> Self {
         self.0.id = id.into();
         self
     }
     
+    /// set the title of the feed
     pub fn title<T:Into<String>>(mut self, title:T) -> Self {
         self.0.title = title.into();
         self
     }
     
+    /// set the home URL of the feed
     pub fn home_url<T:Into<String>>(mut self, home_url:T) -> Self {
         self.0.home_url = home_url.into();
         self
     }
     
+    /// set the feed URL of the feed
     pub fn feed_url<T:Into<String>>(mut self, feed_url:T) -> Self {
         self.0.feed_url = feed_url.into();
         self
     }
     
+    /// set the author of the feed
     pub fn author<T:Into<String>>(mut self, author:T) -> Self {
         self.0.author = author.into();
         self
     }
     
+    /// set the email address of the feed
     pub fn email<T:Into<String>>(mut self, email:T) -> Self {
         self.0.email = email.into();
         self
     }
     
+    /// set the updated date of the feed
     pub fn date_updated(mut self, date:DateTime<Local>) -> Self {
         self.0.date_updated = Some(date);
         self
     }
 
-    pub fn build(self) -> Feed {
-        self.0
+    /// build the `FeedBuilder` in a `Feed`
+    pub fn build(self) -> Result<Feed, Error> {
+        Ok(self.0)
     }
 }
 
+/// a feed `Entry`
 #[derive(Debug)]
 pub struct Entry {
-    pub title:String,
-    pub url:String,
-    pub content:String,
-    pub date:DateTime<Local>,
-    pub date_updated:Option<DateTime<Local>>,
-    pub author:Option<String>,
-    pub email:Option<String>,
+    title:String,
+    url:String,
+    content:String,
+    date:DateTime<Local>,
+    date_updated:Option<DateTime<Local>>,
+    author:Option<String>,
+    email:Option<String>,
 }
 
 fn make_atom_feed(feed:Feed,entries:Vec<atom_syndication::Entry>) -> Result<atom_syndication::Feed, Error> {
@@ -125,7 +140,8 @@ fn make_atom_entry(feed:&Feed, entry:Entry) -> Result<atom_syndication::Entry, E
     Ok(entry)
 }
 
-pub fn make_atom<W:Write>(feed:Feed, entries:Vec<Entry>, output:W) -> Result<(), Error> {
+/// write a feed and its entries to a writer
+pub fn write_atom_feed<W:Write>(feed:Feed, entries:Vec<Entry>, output:W) -> Result<(), Error> {
     let mut v = vec![];
     for e in entries {
         let e2 = make_atom_entry(&feed, e)?;
@@ -140,9 +156,10 @@ pub fn make_atom<W:Write>(feed:Feed, entries:Vec<Entry>, output:W) -> Result<(),
     Ok(())
 }
 
-pub fn make_atom_file(feed:Feed, entries:Vec<Entry>, filename:&str) -> Result<(), Error> {
+/// write a feed and its entries to a file
+pub fn write_atom_file(feed:Feed, entries:Vec<Entry>, filename:&str) -> Result<(), Error> {
     let out = File::create(filename)?;
-    make_atom(feed, entries, out)
+    write_atom_feed(feed, entries, out)
     
 }
 
