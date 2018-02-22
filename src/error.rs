@@ -50,3 +50,12 @@ impl From<String> for Error {
         }
     }
 }
+
+
+impl<'a> From<&'a str> for Error {
+    fn from(e:&'a str) -> Error {
+        Error::Error {
+            txt: e.into()
+        }
+    }
+}

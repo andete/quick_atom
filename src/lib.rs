@@ -23,12 +23,12 @@ use chrono::{DateTime, Local};
 /// an Atom Feed
 #[derive(Debug, Default)]
 pub struct Feed {
-    id:String,
-    title:String,
-    home_url:String,
-    feed_url:String,
-    author:String,
-    email:String,
+    id:Option<String>,
+    title:Option<String>,
+    home_url:Option<String>,
+    feed_url:Option<String>,
+    author:Option<String>,
+    email:Option<String>,
     date_updated:Option<DateTime<Local>>,
 }
 
@@ -40,37 +40,37 @@ impl FeedBuilder {
 
     /// set the id of the feed
     pub fn id<T:Into<String>>(mut self, id:T) -> Self {
-        self.0.id = id.into();
+        self.0.id = Some(id.into());
         self
     }
     
     /// set the title of the feed
     pub fn title<T:Into<String>>(mut self, title:T) -> Self {
-        self.0.title = title.into();
+        self.0.title = Some(title.into());
         self
     }
     
     /// set the home URL of the feed
     pub fn home_url<T:Into<String>>(mut self, home_url:T) -> Self {
-        self.0.home_url = home_url.into();
+        self.0.home_url = Some(home_url.into());
         self
     }
     
     /// set the feed URL of the feed
     pub fn feed_url<T:Into<String>>(mut self, feed_url:T) -> Self {
-        self.0.feed_url = feed_url.into();
+        self.0.feed_url = Some(feed_url.into());
         self
     }
     
     /// set the author of the feed
     pub fn author<T:Into<String>>(mut self, author:T) -> Self {
-        self.0.author = author.into();
+        self.0.author = Some(author.into());
         self
     }
     
     /// set the email address of the feed
     pub fn email<T:Into<String>>(mut self, email:T) -> Self {
-        self.0.email = email.into();
+        self.0.email = Some(email.into());
         self
     }
     
@@ -82,6 +82,24 @@ impl FeedBuilder {
 
     /// build the `FeedBuilder` in a `Feed`
     pub fn build(self) -> Result<Feed, Error> {
+        if self.0.id.is_none() {
+            return Err("Feed id is mandatory".into())
+        }
+        if self.0.title.is_none() {
+            return Err("Feed title is mandatory".into())
+        }
+        if self.0.home_url.is_none() {
+            return Err("Feed home URL is mandatory".into())
+        }
+        if self.0.feed_url.is_none() {
+            return Err("Feed URL is mandatory".into())
+        }
+        if self.0.author.is_none() {
+            return Err("Feed author is mandatory".into())
+        }
+        if self.0.email.is_none() {
+            return Err("Feed email is mandatory".into())
+        }
         Ok(self.0)
     }
 }
@@ -100,14 +118,14 @@ pub struct Entry {
 
 fn make_atom_feed(feed:Feed,entries:Vec<atom_syndication::Entry>) -> Result<atom_syndication::Feed, Error> {
     let mut link = atom_syndication::Link::default();
-    link.set_href(feed.home_url);
+    link.set_href(feed.home_url.unwrap());
     let mut link2 = atom_syndication::Link::default();
-    link2.set_href(feed.feed_url);
+    link2.set_href(feed.feed_url.unwrap());
     link2.set_rel("self");
     let date_updated = feed.date_updated.unwrap_or(Local::now()).to_rfc3339();
     let feed = atom_syndication::FeedBuilder::default()
-        .id(feed.id)
-        .title(feed.title)
+        .id(feed.id.unwrap())
+        .title(feed.title.unwrap())
         .links(vec![link2, link])
         .entries(entries)
         .updated(date_updated)
@@ -124,8 +142,8 @@ fn make_atom_entry(feed:&Feed, entry:Entry) -> Result<atom_syndication::Entry, E
     content.set_value(entry.content);
     
     let person = atom_syndication::PersonBuilder::default()
-        .name(entry.author.unwrap_or(feed.author.clone()))
-        .email(entry.email.unwrap_or(feed.email.clone()))
+        .name(entry.author.unwrap_or(feed.author.clone().unwrap()))
+        .email(entry.email.unwrap_or(feed.email.clone().unwrap()))
         .uri(feed.home_url.clone())
         .build()?;
     
